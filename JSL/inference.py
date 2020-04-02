@@ -1,34 +1,18 @@
 import os, sys
 sys.path.append(os.path.abspath("."))
-import torch
 from verb.imsituDatasetGood import imSituDatasetGood
-from torch.utils.data import DataLoader
 from verb.verbModel import ImsituVerb
-from tensorboardX import SummaryWriter
-import argparse
 import datetime
-import sys
-import pdb
-import os
-import json
-
+import h5py
 import argparse
 import json
 import torch
-import torch.optim as optim
 from torchvision import datasets, models, transforms
-from tensorboardX import SummaryWriter
 import warnings
 import JSL.gsr.model as jsl_model
 from JSL.gsr.dataloader import CSVDataset, collater, Resizer, AspectRatioBasedSampler, Augmenter, UnNormalizer, Normalizer
 from torch.utils.data import Dataset, DataLoader
-
-from global_utils.imsitu_eval import BboxEval
-from global_utils.format_utils import cmd_to_title
-from global_utils import format_utils
-import sys
-
-
+import pdb
 
 
 def main():
@@ -43,13 +27,17 @@ def main():
     parser.add_argument("--hidden-size", type=int, default=1024)
     parser.add_argument("--batch-size", type=int, default=16)
     parser.add_argument("--weights-path", type=str, default=None)
-
+    parser.add_argument("--store-features", action="store_true", default=False)
 
     args = parser.parse_args()
 
     if args.weights_path == None:
         print('please input a path to the model weights')
         return
+
+    if args.store_features:
+        if not os.path.exists('local_features'):
+            os.makedirs('local_features')
 
     kwargs = {"num_workers": args.workers} if torch.cuda.is_available() else {}
     verbs = './global_utils/verb_indices.txt'
@@ -86,10 +74,10 @@ def main():
     retinanet.module.load_state_dict(x['state_dict'], strict = False)
     print('weights loaded')
 
-    evaluate(retinanet, dataloader_val, args, dataset_val, dataset_val, verb_orders, noun_dict, idx_to_verb)
+    evaluate(retinanet, dataloader_val, args, dataset_val, dataset_val, verb_orders, noun_dict, idx_to_verb, args.store_features)
 
 
-def evaluate(retinanet, dataloader_val, parser, dataset_val, dataset_train, verb_orders, noun_dict, idx_to_verb):
+def evaluate(retinanet, dataloader_val, parser, dataset_val, dataset_train, verb_orders, noun_dict, idx_to_verb, store_features):
     retinanet.training = False
     retinanet.eval()
     k = 0
@@ -108,13 +96,27 @@ def evaluate(retinanet, dataloader_val, parser, dataset_val, dataset_train, verb
         shift_0 = data['shift_0']
 
         with torch.no_grad():
-            verb_guess, noun_predicts, bbox_predicts, bbox_exists = retinanet(x, annotations, y, widths, heights, 1, use_gt_verb=True)
+            if store_features:
+                verb_guess, noun_predicts, bbox_predicts, bbox_exists, local_features = retinanet(x, annotations, y, widths, heights, 1, use_gt_verb=True, return_local_features=True)
+            else:
+                verb_guess, noun_predicts, bbox_predicts, bbox_exists = retinanet(x, annotations, y, widths, heights, 1, use_gt_verb=True)
+
         for i in range(len(verb_guess)):
             image = data['img_name'][i].split('/')[-1]
             verb = dataset_train.idx_to_verb[verb_guess[i]]
             nouns = []
             bboxes = []
+
+            if store_features:
+                just_image = image.split('.')[0]
+                features = h5py.File('local_features/{}.hdf5'.format(just_image), 'w')
+
             for j in range(len(verb_orders[verb]['order'])):
+
+                if store_features:
+                    noun_local_features = local_features[i, j].cpu()
+                    features.create_dataset(str(j), data=noun_local_features)
+
                 if dataset_train.idx_to_class[noun_predicts[j][i]] == 'blank':
                     nouns.append('')
                 else:
@@ -129,6 +131,8 @@ def evaluate(retinanet, dataloader_val, parser, dataset_val, dataset_train, verb
                     bboxes.append(bbb)
                 else:
                     bboxes.append(None)
+            if store_features:
+                features.close()
             results[image] = {'verb': idx_to_verb[y[i]], 'nouns': nouns, 'boxes': bboxes}
     with open('results.json', 'w') as f:
         json.dump(results, f, indent=4)

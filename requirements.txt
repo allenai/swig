@@ -1,5 +1,6 @@
 cycler==0.10.0
 decorator==4.4.2
+h5py==2.10.0
 imageio==2.8.0
 kiwisolver==1.2.0
 matplotlib==3.2.1

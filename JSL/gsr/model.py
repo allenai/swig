@@ -243,7 +243,7 @@ class ResNet_RetinaNet_RNN(nn.Module):
         self.verb_loss_function = nn.CrossEntropyLoss()
 
 
-    def forward(self, img_batch, annotations, verb, widths, heights, epoch_num, detach_resnet=False, use_gt_nouns=False, use_gt_verb=False):
+    def forward(self, img_batch, annotations, verb, widths, heights, epoch_num, detach_resnet=False, use_gt_nouns=False, use_gt_verb=False, return_local_features=False):
 
         batch_size = img_batch.shape[0]
 
@@ -293,7 +293,8 @@ class ResNet_RetinaNet_RNN(nn.Module):
             bbox_exist_list = []
 
 
-        #local_features = []
+        if return_local_features:
+            local_features = []
 
         for i in range(6):
             rnn_input = torch.cat((image_predict, verb_word, previous_word, roi_features), dim=1)
@@ -317,8 +318,8 @@ class ResNet_RetinaNet_RNN(nn.Module):
             noun_pred = self.vocab_linear(noun_pred)
             noun_pred = self.vocab_linear_2(self.relu(noun_pred))
             classification_guess = torch.argmax(noun_pred, dim=1)
-
-            #local_features.append(roi_features)
+            if return_local_features:
+                local_features.append(roi_features)
 
             if self.training:
                 for noun_index in range(4, 7):
@@ -342,7 +343,9 @@ class ResNet_RetinaNet_RNN(nn.Module):
                 noun_predicts.append(classification_guess)
                 bbox_exist_list.append(bbox_exist)
 
-        #pdb.set_trace()
+        if return_local_features:
+            all_local_features = torch.stack(local_features).transpose(0,1)
+
         if self.training:
             anns = annotations[:, :, :].unsqueeze(1)
             class_all = torch.cat([c.unsqueeze(1) for c in class_list], dim=1)
@@ -356,6 +359,9 @@ class ResNet_RetinaNet_RNN(nn.Module):
             return all_class_loss, all_reg_loss, all_bbox_loss, noun_loss
 
         else:
+            if return_local_features:
+                return verb, noun_predicts, bbox_predicts, bbox_exist_list, all_local_features
+
             return verb, noun_predicts, bbox_predicts, bbox_exist_list
 
 
