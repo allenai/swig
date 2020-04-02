@@ -97,7 +97,7 @@ def evaluate(retinanet, dataloader_val, parser, dataset_val, dataset_train, verb
     results = {}
     for iter_num, data in enumerate(dataloader_val):
         if k % 100 == 0:
-            print(str(k) + " out of " + str(len(dataset_val) / parser.eval_batch_size))
+            print(str(k) + " out of " + str(len(dataset_val) / parser.batch_size))
         k += 1
         x = data['img'].cuda().float()
         y = data['verb_idx'].cuda()

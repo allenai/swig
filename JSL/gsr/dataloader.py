@@ -108,7 +108,8 @@ class CSVDataset(Dataset):
 
 
     def __len__(self):
-        return len(self.image_names)
+        return 16
+        #return len(self.image_names)
 
 
     def __getitem__(self, idx):

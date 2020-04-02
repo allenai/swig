@@ -292,6 +292,9 @@ class ResNet_RetinaNet_RNN(nn.Module):
             bbox_predicts = []
             bbox_exist_list = []
 
+
+        #local_features = []
+
         for i in range(6):
             rnn_input = torch.cat((image_predict, verb_word, previous_word, roi_features), dim=1)
             hx, cx = self.rnn(rnn_input, (hx, cx))
@@ -315,6 +318,8 @@ class ResNet_RetinaNet_RNN(nn.Module):
             noun_pred = self.vocab_linear_2(self.relu(noun_pred))
             classification_guess = torch.argmax(noun_pred, dim=1)
 
+            #local_features.append(roi_features)
+
             if self.training:
                 for noun_index in range(4, 7):
                     noun_gt = annotations[torch.arange(batch_size), i, noun_index]
@@ -337,6 +342,7 @@ class ResNet_RetinaNet_RNN(nn.Module):
                 noun_predicts.append(classification_guess)
                 bbox_exist_list.append(bbox_exist)
 
+        #pdb.set_trace()
         if self.training:
             anns = annotations[:, :, :].unsqueeze(1)
             class_all = torch.cat([c.unsqueeze(1) for c in class_list], dim=1)
