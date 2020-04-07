@@ -8,7 +8,6 @@ import argparse
 import json
 import torch
 from torchvision import datasets, models, transforms
-import warnings
 import JSL.gsr.model as jsl_model
 from JSL.gsr.dataloader import CSVDataset, collater, Resizer, AspectRatioBasedSampler, Augmenter, UnNormalizer, Normalizer
 from torch.utils.data import Dataset, DataLoader
@@ -51,7 +50,7 @@ def main():
     model = torch.nn.DataParallel(model).cuda()
     x = torch.load(args.weights_path + '/verb_check_26.pth.tar')
     model.module.load_state_dict(x['state_dict'])
-    results = eval(model, test_dataloader, idx_to_verb)
+    results = eval(model, test_dataloader, idx_to_verb, args)
 
     with open('./SWiG_jsons/imsitu_space.json') as f:
         all = json.load(f)
@@ -64,8 +63,6 @@ def main():
                              verb_info=verb_orders, is_training=False, transform=transforms.Compose([Normalizer(), Resizer(False)]))
     sampler_val = AspectRatioBasedSampler(dataset_val, batch_size=args.batch_size, drop_last=True)
     dataloader_val = DataLoader(dataset_val, num_workers=64, collate_fn=collater, batch_sampler=sampler_val)
-
-    warnings.filterwarnings("ignore", message="indexing with dtype torch.uint8 is now deprecated, please use a dtype torch.bool instead")
 
     print("loading weights")
     retinanet = jsl_model.resnet50(num_classes=dataset_val.num_classes(), num_nouns=dataset_val.num_nouns(), parser=args, pretrained=True)
@@ -108,7 +105,7 @@ def evaluate(retinanet, dataloader_val, parser, dataset_val, dataset_train, verb
             bboxes = []
 
             if store_features:
-                just_image = image.split('.')[0]
+                just_image = image.split('.jpg')[0]
                 features = h5py.File('local_features/{}.hdf5'.format(just_image), 'w')
 
             for j in range(len(verb_orders[verb]['order'])):
@@ -141,18 +138,22 @@ def evaluate(retinanet, dataloader_val, parser, dataset_val, dataset_train, verb
 
 
 
-def eval(model, data_loader, idx_to_verb):
+def eval(model, data_loader, idx_to_verb, parser):
     model.eval()
     print()
     print("predicting verbs for each image...")
     results = {}
+    k = 0
     with torch.no_grad():
         for sample in data_loader:
+            if k % 100 == 0:
+                print(str(k) + " out of " + str(len(data_loader) / parser.batch_size))
             words = sample["im_name"]
             image_names = (sample["image"].cuda())
             verb, top_5_verb = model(1, image_names, False, is_train=False)
             for i in range(len(words)):
                 results[words[i]] = int(verb[i])
+            k += 1
     print("verbs complete")
     return results
 

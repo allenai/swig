@@ -107,17 +107,24 @@ class FocalLoss(nn.Module):
 
 
             classification_losses.append(cls_loss.sum(dim=1).sum(dim=1)/torch.clamp(num_positive_anchors.float(), min=1.0))
-            positive_indices = positive_indices.byte()
+            #positive_indices = positive_indices.long()
+            #positive_indices = positive_indices.bool()
+
+
 
             # compute the loss for regression
             for i in range(6):
 
                 if num_positive_anchors[i] > 0 and bbox_exists_tensor[j, i]:
 
+                    # x = torch.arange(len(positive_indices[i]))
+                    # x = x[positive_indices[i]]
+
                     #assigned_annotations = assigned_annotations[positive_indices[:, i], :]
                     assigned_annotations = bbox_annotation[i, :].long().unsqueeze(0).float()
 
                     anchor_widths_pi = anchor_widths[positive_indices[i]]
+
                     anchor_heights_pi = anchor_heights[positive_indices[i]]
                     anchor_ctr_x_pi = anchor_ctr_x[positive_indices[i]]
                     anchor_ctr_y_pi = anchor_ctr_y[positive_indices[i]]
@@ -141,7 +148,7 @@ class FocalLoss(nn.Module):
 
                     targets = targets/torch.Tensor([[0.1, 0.1, 0.2, 0.2]]).cuda()
 
-                    negative_indices = 1 - positive_indices[i]
+                    #negative_indices = 1 - positive_indices[i]
 
                     regression_diff = torch.abs(targets - regression[i, positive_indices[i], :])
 

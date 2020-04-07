@@ -6,7 +6,6 @@ import torch
 import torch.optim as optim
 from torchvision import datasets, models, transforms
 from tensorboardX import SummaryWriter
-import warnings
 import model
 from dataloader import CSVDataset, collater, Resizer, AspectRatioBasedSampler, Augmenter, UnNormalizer, Normalizer
 from torch.utils.data import Dataset, DataLoader
@@ -15,13 +14,11 @@ from global_utils.imsitu_eval import BboxEval
 from global_utils.format_utils import cmd_to_title
 from global_utils import format_utils
 import sys
-
-#assert torch.__version__.split('.')[1] == '4'
-
 print('CUDA available: {}'.format(torch.cuda.is_available()))
 
-def main(args=None):
 
+
+def main(args=None):
 	parser = argparse.ArgumentParser(description='Simple training script for training a RetinaNet network.')
 	parser.add_argument('--train-file', help='Path to file containing training annotations (see readme)')
 	parser.add_argument('--classes-file', help='Path to file containing class list (see readme)')
@@ -29,19 +26,20 @@ def main(args=None):
 	parser.add_argument('--role-file', help='Path to role file')
 	parser.add_argument('--epochs', help='Number of epochs', type=int, default=50)
 	parser.add_argument('--title', type=str, default='')
-	parser.add_argument("--resume_model", type=str, default="")
-	parser.add_argument("--resume_epoch", type=int, default=0)
-	parser.add_argument("--detach_epoch", type=int, default=12)
-	parser.add_argument("--gt_noun_epoch", type=int, default=5)
+	parser.add_argument("--resume-epoch", type=int, default=0)
+	parser.add_argument("--detach-epoch", type=int, default=12)
+	parser.add_argument("--gt-noun-epoch", type=int, default=5)
 	parser.add_argument("--hidden-size", type=int, default=1024)
 	parser.add_argument("--lr-decrease", type=int, default=10)
 	parser.add_argument("--second-lr-decrease", type=int, default=20)
 	parser.add_argument("--iteration", type=float, default=100.0)
 	parser.add_argument("--lr", type=float, default=.0006)
 	parser.add_argument("--batch-size", type=int, default=16)
-	parser.add_argument("--eval-batch-size", type=int, default=16)
 	parser = parser.parse_args(args)
+
 	writer, log_dir = init_log_dir(parser)
+
+	print('correct version')
 
 	print("loading dev")
 	with open('./SWiG_jsons/dev.json') as f:
@@ -53,32 +51,15 @@ def main(args=None):
 		noun_dict = all['nouns']
 
 	dataloader_train, dataset_train, dataloader_val, dataset_val = init_data(parser, verb_orders)
-
-	warnings.filterwarnings("ignore", message="indexing with dtype torch.uint8 is now deprecated, please use a dtype torch.bool instead")
-
 	print("loading model")
 	retinanet = model.resnet50(num_classes=dataset_train.num_classes(), num_nouns=dataset_train.num_nouns(), parser=parser, pretrained=True)
 	retinanet = torch.nn.DataParallel(retinanet).cuda()
 	optimizer = optim.Adam(retinanet.parameters(), lr=parser.lr)
 
-
-	lr_policy = format_utils.cosine_lr(optimizer, parser)
-
-	print('Num training images: {}'.format(len(dataset_train)))
-
-	#load_old_weights(retinanet, './retinanet_50.pth')
-	# print("sarah test 14")
-	#x = torch.load('./retinanet_27.pth')
-	#retinanet.module.load_state_dict(x['state_dict'], strict = False)
-	#optimizer.load_state_dict(x['optimizer'])
-	# for param_group in optimizer.param_groups:
-	# 	param_group["lr"] = parser.lr
-
-
 	print('weights loaded')
 
 	for epoch_num in range(parser.resume_epoch, parser.epochs):
-		#train(retinanet, optimizer, dataloader_train, parser, epoch_num, writer)
+		train(retinanet, optimizer, dataloader_train, parser, epoch_num, writer)
 		#torch.save({'state_dict': retinanet.module.state_dict(), 'optimizer': optimizer.state_dict()}, log_dir + '/checkpoints/retinanet_{}.pth'.format(epoch_num))
 		print('Evaluating dataset')
 		evaluate(retinanet, dataloader_val, parser, dataset_val, dataset_train, verb_orders, dev_gt, epoch_num, writer, noun_dict)
@@ -100,13 +81,11 @@ def train(retinanet, optimizer, dataloader_train, parser, epoch_num, writer):
 
 	if epoch_num == parser.lr_decrease:
 		lr = parser.lr / 10
-
 		for param_group in optimizer.param_groups:
 			param_group["lr"] = lr
 
 	if epoch_num == parser.second_lr_decrease:
 		lr = parser.lr / 100
-
 		for param_group in optimizer.param_groups:
 			param_group["lr"] = lr
 
@@ -115,10 +94,8 @@ def train(retinanet, optimizer, dataloader_train, parser, epoch_num, writer):
 	else:
 		print("Not using gt nouns")
 
-
 	for iter_num, data in enumerate(dataloader_train):
 		i += 1
-
 		optimizer.zero_grad()
 		image = data['img'].cuda().float()
 		annotations = data['annot'].cuda().float()
@@ -170,7 +147,7 @@ def evaluate(retinanet, dataloader_val, parser, dataset_val, dataset_train, verb
 	k = 0
 	for iter_num, data in enumerate(dataloader_val):
 		if k % 100 == 0:
-			print(str(k) + " out of " + str(len(dataset_val) / parser.eval_batch_size))
+			print(str(k) + " out of " + str(len(dataset_val) / parser.batch_size))
 		k += 1
 		x = data['img'].cuda().float()
 		y = data['verb_idx'].cuda()
@@ -188,7 +165,7 @@ def evaluate(retinanet, dataloader_val, parser, dataset_val, dataset_train, verb
 			nouns = []
 			bboxes = []
 			for j in range(6):
-				if dataset_train.idx_to_class[noun_predicts[j][i]] == 'not':
+				if dataset_train.idx_to_class[noun_predicts[j][i]] == 'blank':
 					nouns.append('')
 				else:
 					nouns.append(dataset_train.idx_to_class[noun_predicts[j][i]])
@@ -216,6 +193,26 @@ def evaluate(retinanet, dataloader_val, parser, dataset_val, dataset_train, verb
 	writer.add_scalar("val/value_all_bbox", evaluator.value_all_bbox(), epoch_num)
 
 
+
+# def init_data(parser, verb_orders):
+# 	dataset_train = CSVDataset(train_file=parser.train_file, class_list=parser.classes_file, role_list= parser.role_file, is_training=True,
+# 							   transform=transforms.Compose([Normalizer(), Augmenter(), Resizer(True)]))
+#
+# 	if parser.val_file is None:
+# 		dataset_val = None
+# 		print('No validation annotations provided.')
+# 	else:
+# 		dataset_val = CSVDataset(train_file=parser.val_file, class_list=parser.classes_file, role_list= parser.role_file, is_training=False,
+# 								 transform=transforms.Compose([Normalizer(), Resizer(False)]))
+#
+# 	sampler = AspectRatioBasedSampler(dataset_train, batch_size=parser.batch_size, drop_last=True)
+# 	dataloader_train = DataLoader(dataset_train, num_workers=64, collate_fn=collater, batch_sampler=sampler)
+#
+# 	if dataset_val is not None:
+# 		sampler_val = AspectRatioBasedSampler(dataset_val, batch_size=parser.batch_size, drop_last=True)
+# 		dataloader_val = DataLoader(dataset_val, num_workers=64, collate_fn=collater, batch_sampler=sampler_val)
+# 	return dataloader_train, dataset_train, dataloader_val, dataset_val
+
 def init_data(parser, verb_orders):
 	dataset_train = CSVDataset(train_file=parser.train_file, class_list=parser.classes_file, verb_info= verb_orders, is_training=True,
 							   transform=transforms.Compose([Normalizer(), Augmenter(), Resizer(True)]))
@@ -231,7 +228,7 @@ def init_data(parser, verb_orders):
 	dataloader_train = DataLoader(dataset_train, num_workers=64, collate_fn=collater, batch_sampler=sampler)
 
 	if dataset_val is not None:
-		sampler_val = AspectRatioBasedSampler(dataset_val, batch_size=parser.eval_batch_size, drop_last=True)
+		sampler_val = AspectRatioBasedSampler(dataset_val, batch_size=parser.batch_size, drop_last=True)
 		dataloader_val = DataLoader(dataset_val, num_workers=64, collate_fn=collater, batch_sampler=sampler_val)
 	return dataloader_train, dataset_train, dataloader_val, dataset_val
 

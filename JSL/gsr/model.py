@@ -318,6 +318,7 @@ class ResNet_RetinaNet_RNN(nn.Module):
             noun_pred = self.vocab_linear(noun_pred)
             noun_pred = self.vocab_linear_2(self.relu(noun_pred))
             classification_guess = torch.argmax(noun_pred, dim=1)
+
             if return_local_features:
                 local_features.append(roi_features)
 
