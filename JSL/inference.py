@@ -25,13 +25,21 @@ def main():
     parser.add_argument("--gt_noun_epoch", type=int, default=5)
     parser.add_argument("--hidden-size", type=int, default=1024)
     parser.add_argument("--batch-size", type=int, default=16)
-    parser.add_argument("--weights-path", type=str, default=None)
+    parser.add_argument("--verb-path", type=str, default=None)
+    parser.add_argument("--jsl-path", type=str, default=None)
+    parser.add_argument("--image-file", type=str, default='')
     parser.add_argument("--store-features", action="store_true", default=False)
 
     args = parser.parse_args()
 
-    if args.weights_path == None:
-        print('please input a path to the model weights')
+    if args.verb_path == None:
+        print('please input a path to the verb model weights')
+        return
+    if args.jsl_path == None:
+        print('please input a path to the jsl model weights')
+        return
+    if args.image_file == None:
+        print('please input a path to the image file')
         return
 
     if args.store_features:
@@ -44,11 +52,11 @@ def main():
 
     print("initializing verb model")
 
-    test_dataset = imSituDatasetGood(verb_to_idx, './all_ims.txt', inference=True, is_train=False)
+    test_dataset = imSituDatasetGood(verb_to_idx, args.image_file, inference=True, is_train=False)
     test_dataloader = DataLoader(test_dataset, batch_size=args.batch_size, **kwargs)
     model = ImsituVerb()
     model = torch.nn.DataParallel(model).cuda()
-    x = torch.load(args.weights_path + '/verb_check_26.pth.tar')
+    x = torch.load(args.verb_path)
     model.module.load_state_dict(x['state_dict'])
     results = eval(model, test_dataloader, idx_to_verb, args)
 
@@ -59,7 +67,7 @@ def main():
 
     print("initializing gsr model")
 
-    dataset_val = CSVDataset(train_file='./all_ims.txt', class_list='./global_utils/train_classes.csv', inference=True, inference_verbs=results,
+    dataset_val = CSVDataset(train_file=args.image_file, class_list='./global_utils/train_classes.csv', inference=True, inference_verbs=results,
                              verb_info=verb_orders, is_training=False, transform=transforms.Compose([Normalizer(), Resizer(False)]))
     sampler_val = AspectRatioBasedSampler(dataset_val, batch_size=args.batch_size, drop_last=True)
     dataloader_val = DataLoader(dataset_val, num_workers=64, collate_fn=collater, batch_sampler=sampler_val)
@@ -67,7 +75,7 @@ def main():
     print("loading weights")
     retinanet = jsl_model.resnet50(num_classes=dataset_val.num_classes(), num_nouns=dataset_val.num_nouns(), parser=args, pretrained=True)
     retinanet = torch.nn.DataParallel(retinanet).cuda()
-    x = torch.load(args.weights_path + '/JSL_27.pth')
+    x = torch.load(args.jsl_path)
     retinanet.module.load_state_dict(x['state_dict'], strict = False)
     print('weights loaded')
 

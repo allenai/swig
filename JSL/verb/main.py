@@ -17,7 +17,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument("--title", type=str, default=None)
 parser.add_argument("--batch-size", type=int, default=256)
 parser.add_argument("--workers", type=int, default=16)
-parser.add_argument("--lr", type=float, default=0.001)
+parser.add_argument("--lr", type=float, default=0.0001)
 
 
 
@@ -53,31 +53,11 @@ def main():
 
     print(sum([p.numel() for p in model.parameters()]))
 
-    # x = torch.load('./check_26.pth.tar')
-    # new_state_dict = {}
-    # for key in x['state_dict']:
-    #     new_state_dict[key.split('module.')[-1]] = x['state_dict'][key]
-    #
-    # model.load_state_dict(new_state_dict)
-
     model = torch.nn.DataParallel(model).cuda()
 
-    lr = 0.0001
-    #optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.875, weight_decay=3.0517578125e-05)
+    lr = args.lr
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
-
-    # x = torch.load('./check_26.pth.tar')
-    # model.module.load_state_dict(x['state_dict'])
-    # optimizer.load_state_dict(x['optimizer'])
-    # for param_group in optimizer.param_groups:
-    #     param_group["lr"] = lr
-
-
-    epochs = 100
-    #scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=epochs)
-
     checkpoint_dir = './runs/' + args.title + '/checkpoints'
-
 
 
     for epoch in range(100):
@@ -85,12 +65,10 @@ def main():
             lr = lr/5.0
             for param_group in optimizer.param_groups:
                 param_group["lr"] = lr
-        #writer.add_scalar('lr/lr', optimizer.param_groups[0]["lr"], epoch)
         train(model, train_dataloader, device, optimizer, writer, epoch)
         eval(model, test_dataloader, device, writer, epoch, idx_to_verb)
-        #save_name = checkpoint_dir + "/check_" + str(epoch)+ ".pth.tar"
-        #save_checkpoint({"state_dict": model.module.state_dict(), 'optimizer': optimizer.state_dict()}, save_name)
-        #scheduler.step()
+        save_name = checkpoint_dir + "/check_" + str(epoch)+ ".pth.tar"
+        save_checkpoint({"state_dict": model.module.state_dict(), 'optimizer': optimizer.state_dict()}, save_name)
 
 
 def train(model, data_loader, device, optimizer, writer, epoch_num):
@@ -104,7 +82,7 @@ def train(model, data_loader, device, optimizer, writer, epoch_num):
     for sample in data_loader:
         i += 1
         gt_verb, image_names, roles = (sample["verb"].to(device), sample["image"].to(device), sample["roles"].to(device))
-        loss, verb = model(epoch_num, image_names, gt_verb, roles)
+        loss, verb = model(epoch_num, image_names, gt_verb)
         total += len(verb)
         total_correct += sum(gt_verb.squeeze() == verb)
         loss = loss.mean()
@@ -133,7 +111,7 @@ def eval(model, data_loader, device, writer, epoch, idx_to_verb):
             for sample in data_loader:
                 words = sample["im_name"]
                 gt_verb, image_names, roles = (sample["verb"].to(device), sample["image"].to(device), sample["roles"].to(device))
-                verb, top_5_verb = model(epoch, image_names, gt_verb, roles, is_train=False)
+                verb, top_5_verb = model(epoch, image_names, gt_verb, is_train=False)
                 for i in range(len(words)):
                     top_verbs = []
                     for j in range(5):

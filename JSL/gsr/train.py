@@ -60,7 +60,7 @@ def main(args=None):
 
 	for epoch_num in range(parser.resume_epoch, parser.epochs):
 		train(retinanet, optimizer, dataloader_train, parser, epoch_num, writer)
-		#torch.save({'state_dict': retinanet.module.state_dict(), 'optimizer': optimizer.state_dict()}, log_dir + '/checkpoints/retinanet_{}.pth'.format(epoch_num))
+		torch.save({'state_dict': retinanet.module.state_dict(), 'optimizer': optimizer.state_dict()}, log_dir + '/checkpoints/retinanet_{}.pth'.format(epoch_num))
 		print('Evaluating dataset')
 		evaluate(retinanet, dataloader_val, parser, dataset_val, dataset_train, verb_orders, dev_gt, epoch_num, writer, noun_dict)
 
