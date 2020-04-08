@@ -38,7 +38,7 @@ frame but not grounded, for example in cases of occlusion.
 
  
  
-  ## 1. Inference on  JSL
+  ## 2. Inference on  JSL
   
   To run inference on a set of custom images first download or clone this repository and download the 
   images using the steps detailed above. Additionally, you will need a set of verb classification weights and a
@@ -51,7 +51,7 @@ frame but not grounded, for example in cases of occlusion.
  
   
   
-   ## 1. Training JSL
+   ## 3. Training JSL
    
    We have seperated the training of JSL into training the verb prediction portion of the model and then training the 
    primary noun and detection portion of the model. These portions only need to be combined at evalutation so we seperate them out
