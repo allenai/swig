@@ -1,4 +1,4 @@
- ##Overview
+ ## Overview
 
 This repository contains the Situation With Groundings (SWiG) dataset as
  well as code to train and run inference on the Joint Situtaion Localizer (JSL).
@@ -6,8 +6,8 @@ This repository contains the Situation With Groundings (SWiG) dataset as
  dataset, JSL model, and the GSR task are all detailed in https://arxiv.org/abs/2003.12058.
  
  
- ##SWiG Dataset
+ ## SWiG Dataset
  
- ![alt text](https://github.com/sarahpratt/swig/images/banner.png)
+ ![alt text](https://github.com/sarahpratt/swig/tree/master/images/banner.png)
  
  
