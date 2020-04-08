@@ -8,6 +8,6 @@ This repository contains the Situation With Groundings (SWiG) dataset as
  
  ## SWiG Dataset
  
- ![alt text](https://github.com/sarahpratt/swig/tree/master/images/banner.png)
+ ![alt text](./images/banner.png)
  
  
