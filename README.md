@@ -49,7 +49,9 @@ frame but not grounded, for example in cases of occlusion.
  
  ```python ./JSL/inference --verb-path ./path/to/verb/weights --jsl-path ./path/to/detection/weights --image-file ./path/to/image/path --batch-size batch_size```
  
-  
+  Results will be written to results.json which will contain a prediction for each role in the image and a grounding for each prediction 
+  (groundings may be null). Additionally, you can use the ```--store-features``` flag which will write the local ResNet features for each object to and
+  hdf5. When no grounding is predict, it just uses the features for the entire image.  
   
    ## 3. Training JSL
    
@@ -70,3 +72,17 @@ frame but not grounded, for example in cases of occlusion.
    
    ```python ./JSL/gsr/train.py --train-file ./SWiG_jsons/train.json --val-file ./SWiG_jsons/dev.json --classes-file ./global_utils/train_classes.csv --batch-size batch_size```
  
+
+  ## 4. Citing
+  If you find this project useful in your research, please consider citing:
+
+
+  ``` 
+  @article{Pratt2020Swig,
+  title={Grounded Situation Recognition},
+  author={Sarah Pratt and Mark Yatskar and Luca Weihs and Ali Farhadi and Aniruddha Kembhavi},
+  journal={ArXiv},
+  year={2020},
+  volume={abs/2003.12058}
+  }
+  ```
