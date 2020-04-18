@@ -12,6 +12,8 @@ This repository contains the Situation With Groundings (SWiG) dataset as
  
  ## 1. SWiG Dataset
  
+ TLDR: JSON files are under SWiG_jsons. Images can be downloaded [here](https://swig-data-weights.s3.us-east-2.amazonaws.com/images_512.zip).
+ 
  ![alt text](./images/banner.png)
   
   
@@ -36,6 +38,25 @@ obstacle in the second image). The SWiG dataset has 3 nouns for each role given 
 the noun in grounded in the image. It is possible for a noun to be labeled in the
 frame but not grounded, for example in cases of occlusion.
 
+This information is stored in a JSON format for train, test and dev. There is one entry per image, which 
+contains 'verb', 'frames' and 'bb', as well as the height and width of the image. 'bb' describes 
+the location of each object (where [-1, -1, -1, -1] means no grounding). Frames contains all 3 sets of
+annptations, where each set has a label for each role corresponding to that verb. Below is an example annotation
+for one image.   
+
+```
+"hitchhiking_238.jpg": 
+"verb": "hitchhiking", 
+"height": 683, 
+"width": 512, 
+"bb": {"place": [-1, -1, -1, -1], "agent": [195, 282, 380, 554]}, 
+"frames": [{"place": "n03519981", "agent": "n10287213"}, 
+            {"place": "n03519981", "agent": "n10287213"}, 
+            {"place": "n04096066", "agent": "n10287213"}]
+```
+
+Train, Dev and Test JSONS can be found in the SWiG_jsons directory of this repository. 
+Images can be downloaded [here](https://swig-data-weights.s3.us-east-2.amazonaws.com/images_512.zip).
  
  
   ## 2. Inference on  JSL
@@ -47,7 +68,7 @@ frame but not grounded, for example in cases of occlusion.
  to processes. You can specify this wil a text file where each line of the file contains the path to one 
  image. All images should have a unique name. You can then run inference by navigating into the primary folder and running:
  
- ```python ./JSL/inference --verb-path ./path/to/verb/weights --jsl-path ./path/to/detection/weights --image-file ./path/to/image/path --batch-size batch_size```
+ ```python ./JSL/inference --verb-path ./path/to/verb/weights --jsl-path ./path/to/detection/weights --image-file ./path/to/images --batch-size batch_size```
  
   Results will be written to results.json which will contain a prediction for each role in the image and a grounding for each prediction 
   (groundings may be null). Additionally, you can use the ```--store-features``` flag which will write the local ResNet features for each object to and

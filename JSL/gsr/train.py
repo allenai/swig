@@ -194,25 +194,6 @@ def evaluate(retinanet, dataloader_val, parser, dataset_val, dataset_train, verb
 
 
 
-# def init_data(parser, verb_orders):
-# 	dataset_train = CSVDataset(train_file=parser.train_file, class_list=parser.classes_file, role_list= parser.role_file, is_training=True,
-# 							   transform=transforms.Compose([Normalizer(), Augmenter(), Resizer(True)]))
-#
-# 	if parser.val_file is None:
-# 		dataset_val = None
-# 		print('No validation annotations provided.')
-# 	else:
-# 		dataset_val = CSVDataset(train_file=parser.val_file, class_list=parser.classes_file, role_list= parser.role_file, is_training=False,
-# 								 transform=transforms.Compose([Normalizer(), Resizer(False)]))
-#
-# 	sampler = AspectRatioBasedSampler(dataset_train, batch_size=parser.batch_size, drop_last=True)
-# 	dataloader_train = DataLoader(dataset_train, num_workers=64, collate_fn=collater, batch_sampler=sampler)
-#
-# 	if dataset_val is not None:
-# 		sampler_val = AspectRatioBasedSampler(dataset_val, batch_size=parser.batch_size, drop_last=True)
-# 		dataloader_val = DataLoader(dataset_val, num_workers=64, collate_fn=collater, batch_sampler=sampler_val)
-# 	return dataloader_train, dataset_train, dataloader_val, dataset_val
-
 def init_data(parser, verb_orders):
 	dataset_train = CSVDataset(train_file=parser.train_file, class_list=parser.classes_file, verb_info= verb_orders, is_training=True,
 							   transform=transforms.Compose([Normalizer(), Augmenter(), Resizer(True)]))
