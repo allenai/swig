@@ -52,7 +52,7 @@ frame but not grounded, for example in cases of occlusion.
 This information is stored in a JSON format for train, test and dev. There is one entry per image, which 
 contains 'verb', 'frames' and 'bb', as well as the height and width of the image. 'bb' describes 
 the location of each object (where [-1, -1, -1, -1] means no grounding). Frames contains all 3 sets of
-annptations, where each set has a label for each role corresponding to that verb. Below is an example annotation
+annotations, where each set has a label for each role corresponding to that verb. Below is an example annotation
 for one image.   
 
 ```
