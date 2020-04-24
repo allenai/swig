@@ -9,8 +9,11 @@ This repository contains the Situation With Groundings (SWiG) dataset as
  2. Run inference on JSL
  3. Train JSL
  
- To begin, clone the code and the install the requirements using the below steps (or whatever 
- process you typically use).
+ 
+ If you are only planning to use the SWiG dataset, clone/download the repository and read the 
+ instrucitons in section 1 of this document. If you are planning on running JSL on SWiG or your own dataset
+ , clone/download the repository and install the requirements using the below steps 
+ (or whatever process you typically use).
  
   ``` 
   git clone git@github.com:allenai/swig.git   # Clone repository
