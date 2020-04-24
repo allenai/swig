@@ -9,6 +9,17 @@ This repository contains the Situation With Groundings (SWiG) dataset as
  2. Run inference on JSL
  3. Train JSL
  
+ To begin, clone the code and the install the requirements using the below steps (or whatever 
+ process you typically use).
+ 
+  ``` 
+  git clone git@github.com:allenai/swig.git   # Clone repository
+cd swig                                     # Navigate into repository
+python3 -m venv my_venv                     # Create virtual enviornment with python 3
+source my_venv/bin/activate                 # Activate virtual enviornment
+pip install -r requirements.txt             # Install requirements from requirements file
+  ```
+ 
  
  ## 1. SWiG Dataset
  
@@ -45,7 +56,7 @@ annptations, where each set has a label for each role corresponding to that verb
 for one image.   
 
 ```
-"hitchhiking_238.jpg": 
+"hitchhiking_238.jpg": {
 "verb": "hitchhiking", 
 "height": 683, 
 "width": 512, 
@@ -53,10 +64,38 @@ for one image.
 "frames": [{"place": "n03519981", "agent": "n10287213"}, 
             {"place": "n03519981", "agent": "n10287213"}, 
             {"place": "n04096066", "agent": "n10287213"}]
+}
 ```
 
-Train, Dev and Test JSONS can be found in the SWiG_jsons directory of this repository. 
+Additionally, more information about the nouns and verbs can be found in imsitu_space.json. The "nouns" index of this 
+JSON contains all of the nouns used in this dataset, as well as definitions or glosses for these words. The glosses are 
+all the english words used to describe the wordnet concept. Below is an example of the information for one noun:
+```
+"n10787470": {
+"gloss": ["woman", "adult female"], 
+"def": "an adult female person (as opposed to a man)"
+}
+```
+
+The "verbs" index of imsitu_space.json has additional information for each verb used in the dataset. This includes a 
+framenet category, a definition of the verb, a sentence template containing each role, the order these roles appear in the sentence
+and a description of each role. Below is an example of the information for one verb:
+
+```
+"drinking": {
+"framenet": "Ingestion", 
+"abstract": "the AGENT drinks a LIQUID from a CONTAINER at a PLACE", 
+"def": "take (a liquid) into the mouth and swallow", 
+"order": ["agent", "liquid", "container", "place"], 
+"roles": {"place": {"framenet": "place", "def": "The location where the drink event is happening"}, 
+        "container": {"framenet": "source", "def": "The container in which the liquid is in"}, 
+        "liquid": {"framenet": "ingestibles", "def": "The entity that the agent is drinking"}, 
+        "agent": {"framenet": "ingestor", "def": "The entity doing the drink action"}}
+}
+```
+Imsitu_Space, Train, Dev and Test JSONS can be found in the SWiG_jsons directory of this repository. 
 Images can be downloaded [here](https://swig-data-weights.s3.us-east-2.amazonaws.com/images_512.zip).
+
  
  
   ## 2. Inference on  JSL
@@ -73,6 +112,9 @@ Images can be downloaded [here](https://swig-data-weights.s3.us-east-2.amazonaws
   Results will be written to results.json which will contain a prediction for each role in the image and a grounding for each prediction 
   (groundings may be null). Additionally, you can use the ```--store-features``` flag which will write the local ResNet features for each object to and
   hdf5. When no grounding is predict, it just uses the features for the entire image.  
+  
+  
+  Weights for models described in the paper can be downloaded [here](https://swig-data-weights.s3.us-east-2.amazonaws.com/weights.zip)
   
    ## 3. Training JSL
    
