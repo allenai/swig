@@ -26,7 +26,7 @@ pip install -r requirements.txt             # Install requirements from requirem
  
  ## 1. SWiG Dataset
  
- TLDR: JSON files are under SWiG_jsons. Images can be downloaded [here](https://swig-data-weights.s3.us-east-2.amazonaws.com/images_512.zip).
+ TLDR: JSON files are under SWiG_jsons. Images can be downloaded [here](https://swig-data-weights.s3.us-east-2.amazonaws.com/images).
  
  ![alt text](./images/banner.png)
   

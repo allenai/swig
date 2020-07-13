@@ -15,6 +15,7 @@ from global_utils.format_utils import cmd_to_title
 from global_utils import format_utils
 import sys
 print('CUDA available: {}'.format(torch.cuda.is_available()))
+print("new version")
 
 
 
