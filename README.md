@@ -97,7 +97,7 @@ and a description of each role. Below is an example of the information for one v
 }
 ```
 Imsitu_Space, Train, Dev and Test JSONS can be found in the SWiG_jsons directory of this repository. 
-Images can be downloaded [here](https://swig-data-weights.s3.us-east-2.amazonaws.com/images_512.zip).
+Images can be downloaded [here](https://swig-data-weights.s3.us-east-2.amazonaws.com/images).
 
  
  
