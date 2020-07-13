@@ -159,7 +159,6 @@ def eval(model, data_loader, idx_to_verb, parser):
             words = sample["im_name"]
             image_names = (sample["image"].cuda())
             verb, top_5_verb = model(1, image_names, False, is_train=False)
-            pdb.set_trace()
             for i in range(len(words)):
                 results[words[i]] = int(verb[i])
             k += 1

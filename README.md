@@ -110,7 +110,7 @@ Images can be downloaded [here](https://swig-data-weights.s3.us-east-2.amazonaws
  to processes. You can specify this wil a text file where each line of the file contains the path to one 
  image. All images should have a unique name. You can then run inference by navigating into the primary folder and running:
  
- ```python ./JSL/inference --verb-path ./path/to/verb/weights --jsl-path ./path/to/detection/weights --image-file ./path/to/images --batch-size batch_size```
+ ```python ./JSL/inference.py --verb-path ./path/to/verb/weights --jsl-path ./path/to/detection/weights --image-file ./path/to/images --batch-size batch_size```
  
   Results will be written to results.json which will contain a prediction for each role in the image and a grounding for each prediction 
   (groundings may be null). Additionally, you can use the ```--store-features``` flag which will write the local ResNet features for each object to and
