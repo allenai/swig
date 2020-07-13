@@ -253,7 +253,7 @@ def collater(data):
 
     for i in range(batch_size):
         img = imgs[i]
-        #padded_imgs[i, shift_0[i]:shift_0[i]+img.shape[0], shift_1[i]:shift_1[i]+img.shape[1], :] = img
+        padded_imgs[i, shift_0[i]:shift_0[i]+img.shape[0], shift_1[i]:shift_1[i]+img.shape[1], :] = img
 
 
     max_num_annots = max(annot.shape[0] for annot in annots)
